@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.34607.79
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PulumiDemo.AppHost", "PulumiDemo.AppHost\PulumiDemo.AppHost.csproj", "{39F07042-B674-432A-8332-0272AF18D604}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PulumiDemo.Api", "PulumiDemo.Api\PulumiDemo.Api.csproj", "{461604E6-FE78-4FE0-9966-22AA11C1D3E0}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{39F07042-B674-432A-8332-0272AF18D604}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{39F07042-B674-432A-8332-0272AF18D604}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{39F07042-B674-432A-8332-0272AF18D604}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{39F07042-B674-432A-8332-0272AF18D604}.Release|Any CPU.Build.0 = Release|Any CPU
+		{461604E6-FE78-4FE0-9966-22AA11C1D3E0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{461604E6-FE78-4FE0-9966-22AA11C1D3E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{461604E6-FE78-4FE0-9966-22AA11C1D3E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{461604E6-FE78-4FE0-9966-22AA11C1D3E0}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {AB1D6674-06D2-4AFB-88EB-D89A3785CE25}
+	EndGlobalSection
+EndGlobal
