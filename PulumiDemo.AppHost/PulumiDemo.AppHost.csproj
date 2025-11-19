@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Hosting" Version="8.0.0-preview.4.24116.5" />
+    <PackageReference Include="Aspire.Hosting" Version="9.*" />
 	  <PackageReference Include="Pulumi.Automation" Version="3.*" />
 	  <PackageReference Include="Pulumi.AzureNative" Version="2.*" />
   </ItemGroup>
