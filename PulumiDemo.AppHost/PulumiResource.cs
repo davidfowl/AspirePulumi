@@ -1,7 +1,11 @@
 ﻿using System.Collections.Immutable;
+using Aspire.Hosting;
+using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.Eventing;
 using Aspire.Hosting.Lifecycle;
 using Aspire.Hosting.Publishing;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Pulumi.Automation;
@@ -52,7 +56,7 @@ public static class PulumiExtensions
     public static IResourceBuilder<PulumiResource> AddPulumiStack<TStack>(this IDistributedApplicationBuilder builder, string name, Action<IDictionary<string, ConfigValue>>? configure = null)
         where TStack : Pulumi.Stack, new()
     {
-        builder.Services.TryAddLifecycleHook<PulumiLifecycleHook>();
+        builder.Services.TryAddEventingSubscriber<PulumiLifecycleHook>();
 
         configure = GetConfigure(builder.Configuration, "Pulumi:Stacks:" + name, configure);
 
@@ -63,7 +67,7 @@ public static class PulumiExtensions
 
     public static IResourceBuilder<PulumiResource> AddPulumi(this IDistributedApplicationBuilder builder, string name, Func<IDictionary<string, object?>> program, Action<IDictionary<string, ConfigValue>>? configure = null)
     {
-        builder.Services.TryAddLifecycleHook<PulumiLifecycleHook>();
+        builder.Services.TryAddEventingSubscriber<PulumiLifecycleHook>();
 
         configure = GetConfigure(builder.Configuration, "Pulumi:Stacks:" + name, configure);
 
@@ -74,7 +78,7 @@ public static class PulumiExtensions
 
     public static IResourceBuilder<PulumiResource> AddPulumi(this IDistributedApplicationBuilder builder, string name, Action program, Action<IDictionary<string, ConfigValue>>? configure = null)
     {
-        builder.Services.TryAddLifecycleHook<PulumiLifecycleHook>();
+        builder.Services.TryAddEventingSubscriber<PulumiLifecycleHook>();
 
         configure = GetConfigure(builder.Configuration, "Pulumi:Stacks:" + name, configure);
 
@@ -129,36 +133,42 @@ public static class PulumiExtensions
 }
 
 internal class PulumiLifecycleHook(IHostEnvironment environment, 
-    DistributedApplicationExecutionContext executionContext,
     ILogger<PulumiLifecycleHook> logger) 
-    : IDistributedApplicationLifecycleHook
+    : IDistributedApplicationEventingSubscriber
 {
-    public async Task BeforeStartAsync(DistributedApplicationModel appModel, CancellationToken cancellationToken = default)
+    public Task SubscribeAsync(IDistributedApplicationEventing eventing, DistributedApplicationExecutionContext executionContext, CancellationToken cancellationToken)
     {
-        // Skip pulumi operations during publish
-        if (executionContext.Operation == DistributedApplicationOperation.Publish)
+        eventing.Subscribe<BeforeStartEvent>(async (@event, ct) =>
         {
-            return;
-        }
-
-        foreach (var pulumiResource in appModel.Resources.OfType<PulumiResource>())
-        {
-            var stackArgs = new InlineProgramArgs(environment.ApplicationName, pulumiResource.Name, pulumiResource.Program)
+            // Skip pulumi operations during publish
+            if (executionContext.Operation == DistributedApplicationOperation.Publish)
             {
-                Logger = logger
-            };
+                return;
+            }
 
-            var stack = await LocalWorkspace.CreateOrSelectStackAsync(stackArgs, cancellationToken);
+            var appModel = @event.Model;
+            
+            foreach (var pulumiResource in appModel.Resources.OfType<PulumiResource>())
+            {
+                var stackArgs = new InlineProgramArgs(environment.ApplicationName, pulumiResource.Name, pulumiResource.Program)
+                {
+                    Logger = logger
+                };
 
-            var configuration = new Dictionary<string, ConfigValue>();
+                var stack = await LocalWorkspace.CreateOrSelectStackAsync(stackArgs, ct);
 
-            pulumiResource.Configure?.Invoke(configuration);
+                var configuration = new Dictionary<string, ConfigValue>();
 
-            await stack.Workspace.SetAllConfigAsync(pulumiResource.Name, configuration, cancellationToken);
+                pulumiResource.Configure?.Invoke(configuration);
 
-            var result = await stack.UpAsync(new() { Logger = logger }, cancellationToken: cancellationToken);
+                await stack.Workspace.SetAllConfigAsync(pulumiResource.Name, configuration, ct);
 
-            pulumiResource.Outputs = result.Outputs;
-        }
+                var result = await stack.UpAsync(new() { Logger = logger }, cancellationToken: ct);
+
+                pulumiResource.Outputs = result.Outputs;
+            }
+        });
+
+        return Task.CompletedTask;
     }
 }
